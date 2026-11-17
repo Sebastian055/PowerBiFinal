@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-simulator
+  namespace: solar-bi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: solar-simulator
+  template:
+    metadata:
+      labels:
+        app: solar-simulator
+    spec:
+      containers:
+        - name: simulator
+          image: proyectofinal_alejandroocampo_santiagozapata-main-simulator:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-u", "simulate.py"]
+          envFrom:
+            - configMapRef:
+                name: solar-config
+            - secretRef:
+                name: solar-secret

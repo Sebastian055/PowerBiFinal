@@ -1,0 +1,129 @@
+{
+  "uid": "solar-soc-live",
+  "title": "Operación en Tiempo Real - Microrred Solar y Baterías",
+  "tags": ["solar", "baterias", "opencem"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "SoC Actual - Inversor #1 (%)",
+      "type": "gauge",
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "bg4jdfomba96od" },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 20 },
+              { "color": "green", "value": 40 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT soc_pct FROM fact_telemetria_energia WHERE sk_inversor = 1 ORDER BY ts_utc DESC LIMIT 1;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "SoC Actual - Inversor #2 (%)",
+      "type": "gauge",
+      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "bg4jdfomba96od" },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 20 },
+              { "color": "green", "value": 40 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT soc_pct FROM fact_telemetria_energia WHERE sk_inversor = 2 ORDER BY ts_utc DESC LIMIT 1;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Temperatura Inversores (°C)",
+      "type": "stat",
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "bg4jdfomba96od" },
+      "fieldConfig": { "defaults": { "unit": "celsius" } },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(AVG(temp_inversor_c), 1) AS temp FROM fact_telemetria_energia WHERE ts_utc >= NOW() - INTERVAL '1 minute';",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Registros Totales en Gold",
+      "type": "stat",
+      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "bg4jdfomba96od" },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM fact_telemetria_energia;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Evolución en Vivo del SoC (%) por Inversor",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+      "datasource": { "type": "postgres", "uid": "bg4jdfomba96od" },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ts_utc AS time, 'Inversor #' || sk_inversor AS metric, soc_pct FROM fact_telemetria_energia WHERE $__timeFilter(ts_utc) ORDER BY ts_utc;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Flujo de Potencia: Solar PV vs Consumo vs Red (W)",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+      "datasource": { "type": "postgres", "uid": "bg4jdfomba96od" },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT ts_utc AS time, AVG(potencia_pv_w) AS \"Solar PV (W)\", AVG(potencia_consumo_w) AS \"Consumo (W)\", AVG(potencia_red_w) AS \"Red (W)\" FROM fact_telemetria_energia WHERE $__timeFilter(ts_utc) GROUP BY 1 ORDER BY 1;",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

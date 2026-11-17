@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: SolarMicrorredDashboards
+    orgId: 1
+    folder: Microrred Solar
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

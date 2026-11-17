@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: solar_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-solar_db}
+      POSTGRES_USER: ${POSTGRES_USER:-solar_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-solar_pass}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-solar_user} -d ${POSTGRES_DB:-solar_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  etl:
+    build: ./etl
+    container_name: solar_etl
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-solar_db}
+      POSTGRES_USER: ${POSTGRES_USER:-solar_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-solar_pass}
+      SQLITE_PATH: /data/opencem-v1.0.0.sqlite
+      SAMPLE_STEP: ${SAMPLE_STEP:-60}
+    volumes:
+      - ./data:/data:ro
+    command: ["python", "-u", "load.py"]
+
+  simulator:
+    build: ./etl
+    container_name: solar_simulator
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-solar_db}
+      POSTGRES_USER: ${POSTGRES_USER:-solar_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-solar_pass}
+      SIM_INTERVAL_SEC: ${SIM_INTERVAL_SEC:-5}
+    command: ["python", "-u", "simulate.py"]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: solar_grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      POSTGRES_DB: ${POSTGRES_DB:-solar_db}
+      POSTGRES_USER: ${POSTGRES_USER:-solar_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-solar_pass}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+volumes:
+  pg_data:

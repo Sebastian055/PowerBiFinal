@@ -1,0 +1,61 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "4c98e16946394dd5993c",
+  "position": {
+    "x": 960,
+    "y": 56,
+    "z": 4,
+    "height": 60,
+    "width": 296,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "slicer",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_reference"
+                    }
+                  },
+                  "Property": "reference_name"
+                }
+              },
+              "queryRef": "dim_reference.reference_name",
+              "nativeQueryRef": "reference_name",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Referencia'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

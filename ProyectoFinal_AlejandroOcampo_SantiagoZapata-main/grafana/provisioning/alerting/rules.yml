@@ -1,0 +1,81 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: AlertasBateriaMicrorred
+    folder: Microrred Solar
+    interval: 15s
+    rules:
+      - uid: alert_soc_critico
+        title: SoC Crítico de Batería (< 20%)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: solar_pg_uid
+            model:
+              format: table
+              rawQuery: true
+              rawSql: |
+                SELECT MIN(soc_pct) AS soc_min
+                FROM fact_telemetria_energia
+                WHERE ts_utc >= NOW() - INTERVAL '5 minutes';
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    params: [20]
+                    type: lt
+        for: 30s
+        annotations:
+          summary: "Estado de carga (SoC) de batería cayó por debajo del 20% crítico."
+        labels:
+          severity: critical
+
+      - uid: alert_temp_inversor
+        title: Sobretemperatura en Inversor/Banco (> 45°C)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: solar_pg_uid
+            model:
+              format: table
+              rawQuery: true
+              rawSql: |
+                SELECT MAX(temp_inversor_c) AS temp_max
+                FROM fact_telemetria_energia
+                WHERE ts_utc >= NOW() - INTERVAL '5 minutes';
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    params: [45]
+                    type: gt
+        for: 30s
+        annotations:
+          summary: "Temperatura del inversor superó los 45 °C."
+        labels:
+          severity: warning

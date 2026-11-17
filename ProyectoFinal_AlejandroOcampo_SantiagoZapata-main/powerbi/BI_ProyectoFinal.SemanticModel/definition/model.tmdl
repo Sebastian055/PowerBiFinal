@@ -1,0 +1,23 @@
+model Model
+	culture: es-CO
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: es-CO
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["dim_date","dim_machine","dim_shift","dim_reference","dim_stop","fact_production","fact_downtime"]
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table dim_date
+ref table dim_machine
+ref table dim_shift
+ref table dim_reference
+ref table dim_stop
+ref table fact_production
+ref table fact_downtime
+
